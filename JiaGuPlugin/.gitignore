@@ -1,0 +1,12 @@
+/build
+
+/repo
+/tools/linux/jiagu/.cache
+/tools/linux/jiagu/output
+/tools/linux/jiagu/jiagu.db
+/tools/mac/jiagu/.cache
+/tools/mac/jiagu/output
+/tools/mac/jiagu/jiagu.db
+/tools/windows/jiagu/.cache
+/tools/windows/jiagu/output
+/tools/windows/jiagu/jiagu.db

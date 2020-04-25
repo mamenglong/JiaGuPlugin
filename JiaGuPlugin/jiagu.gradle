@@ -1,0 +1,130 @@
+apply plugin: 'com.mml.jiagu.plugin'
+apply plugin: 'kotlin-android'
+android{
+
+    signingConfigs {
+        v2 {
+            storeFile file("${project.rootDir.absolutePath}/sign.jks")
+            storePassword " "
+            keyAlias "key0"
+            keyPassword " "
+            v2SigningEnabled true
+        }
+        release {
+            storeFile file("${project.rootDir.absolutePath}/sign.jks")
+            storePassword " "
+            keyAlias "key0"
+            keyPassword " "
+            v2SigningEnabled true
+        }
+        v1 {
+            storeFile file("${project.rootDir.absolutePath}/sign.jks")
+            storePassword " "
+            keyAlias "key0"
+            keyPassword " "
+            v2SigningEnabled false
+        }
+
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.v2
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.v2
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            applicationIdSuffix = ""//'.debug'
+        }
+    }
+    /*Gradle3.3 以上的方法 自定义输出路径以及名字*/
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == "release") {
+            def path = "${project.projectDir.absolutePath}/release/${variant.versionName}"
+            println("build path: $path  root:${project.rootDir.absolutePath}")
+            variant.getPackageApplicationProvider().get().outputDirectory = new File(path)
+        }
+
+        variant.getPackageApplicationProvider().get().outputScope.apkDatas.forEach { apkData ->
+            def today = new Date()
+            apkData.outputFileName = ((project.name != "app") ? project.name : rootProject.name) + "_" +
+                    variant.flavorName + "_" +
+                    variant.versionName + "_" +
+                    //today.format('yyyyMMddhhmm') + "_" +
+                    variant.buildType.name + "_" +
+                    ".apk"
+        }
+    }
+
+
+    //多渠道  使用360打包,不再需要这个配置
+ /*   productFlavors {
+        Default {
+            dimension = 'default'
+        }
+        KuAn {
+            dimension "default"
+        }
+        MeiZu {
+            dimension "default"
+        }
+        AnZhi {
+            dimension "default"
+        }
+        HaWei {
+            dimension "default"
+        }
+        productFlavors.all { flavor ->
+            flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
+        }
+    }
+*/
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    androidExtensions {
+        experimental = true
+    }
+
+}
+String os = "${project.rootDir.absolutePath}/BaseWheelsByKotlin/JiaGuPlugin/tools/${getJiaguJarFilePathByOs()}"
+jiagu {
+    jiaGuToolsPath "${os}/jiagu.jar"
+    username " "
+    password " "
+    keyStoreFile android.signingConfigs.release.storeFile.absolutePath
+    keyStorePassword android.signingConfigs.release.storePassword
+    keyAlias android.signingConfigs.release.keyAlias
+    keyAliasPassword android.signingConfigs.release.keyPassword
+    inputFile //"${buildDir.getAbsolutePath()}\\outputs\\apk\\release\\app-release.apk"
+    outputFile //"${buildDir.getAbsolutePath()}\\jiagu" //这里指定的是输出文件夹
+    config '-so', '-data', '-assets', '-string_obfus', '-so_private'
+    channelFile "${os}/多渠道模板.txt"
+}
+
+String getJiaguJarFilePathByOs(){
+    String osName = org.gradle.internal.os.OperatingSystem.current().getName();
+    String osVersion = org.gradle.internal.os.OperatingSystem.current().getVersion();
+    println "*** $osName $osVersion was detected."
+
+    if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
+        println("Linux")
+        return "linux"+File.separator+"jiagu"
+    } else if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        println("Windows")
+        return "windows"+File.separator+"jiagu"
+    } else if (org.gradle.internal.os.OperatingSystem.current().isMacOsX()) {
+        println("OSX")
+        return "mac"+File.separator+"jiagu"
+    }
+}
